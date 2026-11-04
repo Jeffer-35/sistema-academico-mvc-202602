@@ -9,6 +9,9 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Image;
+import java.net.URL;
+import javax.swing.ImageIcon;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -157,7 +160,7 @@ public class VistaPrincipalSwing extends JFrame {
 
     // ===================== PANTALLA DE INICIO =====================
 
-    private JPanel crearPanelInicio() {
+   private JPanel crearPanelInicio() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(COLOR_SECUNDARIO);
 
@@ -165,18 +168,33 @@ public class VistaPrincipalSwing extends JFrame {
         gbc.gridx = 0;
         gbc.insets = new Insets(8, 8, 8, 8);
 
-        gbc.gridy = 0;
-        panel.add(crearEtiqueta("Sistema de Gestión Académica", 30, COLOR_PRIMARIO), gbc);
+        // Logo de la universidad (si la imagen no existe, no se muestra y el programa sigue normal)
+        URL rutaLogo = getClass().getResource("/imagenes/logo-uniajc.png");
+        if (rutaLogo != null) {
+            ImageIcon iconoOriginal = new ImageIcon(rutaLogo);
+            if (iconoOriginal.getIconHeight() > 0) {
+                // Escalar el logo a 150 píxeles de alto, sin deformarlo
+                int alto = 150;
+                int ancho = iconoOriginal.getIconWidth() * alto / iconoOriginal.getIconHeight();
+                Image imagenEscalada = iconoOriginal.getImage()
+                        .getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
+
+                gbc.gridy = 0;
+                panel.add(new JLabel(new ImageIcon(imagenEscalada)), gbc);
+            }
+        }
 
         gbc.gridy = 1;
-        panel.add(crearEtiqueta("UNIAJC - Universidad Antonio José Camacho", 16, COLOR_TEXTO_SECUNDARIO), gbc);
+        panel.add(crearEtiqueta("Sistema de Gestión Académica", 30, COLOR_PRIMARIO), gbc);
 
         gbc.gridy = 2;
+        panel.add(crearEtiqueta("UNIAJC - Universidad Antonio José Camacho", 16, COLOR_TEXTO_SECUNDARIO), gbc);
+
+        gbc.gridy = 3;
         panel.add(crearEtiqueta("Bienvenido. Seleccione una opción del menú para comenzar.", 15, COLOR_EXITO), gbc);
 
         return panel;
     }
-
     private JLabel crearEtiqueta(String texto, int tamano, Color color) {
         JLabel label = new JLabel(texto, SwingConstants.CENTER);
         label.setFont(new Font("Segoe UI", Font.BOLD, tamano));

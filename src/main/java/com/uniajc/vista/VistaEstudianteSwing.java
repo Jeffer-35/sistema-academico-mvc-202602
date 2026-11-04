@@ -43,7 +43,7 @@ import com.uniajc.modelo.Estudiante;
 public class VistaEstudianteSwing extends JPanel {
 
     // Paleta de colores de la guía (también la usa la ventana principal)
-    static final Color COLOR_PRIMARIO = new Color(91, 44, 111);   // Morado oscuro
+    static final Color COLOR_PRIMARIO = new Color(0, 80, 160);   // Azul institucional UNIAJC
     static final Color COLOR_SECUNDARIO = new Color(236, 240, 241);
     static final Color COLOR_ACENTO = new Color(231, 76, 60);
     static final Color COLOR_EXITO = new Color(39, 174, 96);
