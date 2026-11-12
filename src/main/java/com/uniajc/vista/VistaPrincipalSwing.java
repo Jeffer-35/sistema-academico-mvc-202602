@@ -8,14 +8,16 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.Image;
-import java.net.URL;
-import javax.swing.ImageIcon;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.net.URL;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -27,15 +29,19 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
+import com.uniajc.controlador.ControladorDocente;
 import com.uniajc.controlador.ControladorEstudiante;
 import com.uniajc.db.DatabaseConexion;
 
 /**
  * Ventana principal del sistema.
  * Tiene el menú de arriba y un CardLayout que cambia entre pantallas:
- * Inicio, Estudiantes y Configuración.
+ * Inicio, Estudiantes, Docentes y Configuración.
+ *
+ * La ventana implementa ActionListener: es el "oyente" de todas las opciones del menú,
+ * y en actionPerformed se revisa con getSource() cuál opción se presionó.
  */
-public class VistaPrincipalSwing extends JFrame {
+public class VistaPrincipalSwing extends JFrame implements ActionListener {
 
     // Colores (se reutilizan los de VistaEstudianteSwing)
     private static final Color COLOR_PRIMARIO = VistaEstudianteSwing.COLOR_PRIMARIO;
@@ -47,13 +53,26 @@ public class VistaPrincipalSwing extends JFrame {
     // Nombres de cada pantalla dentro del CardLayout
     private static final String PANEL_INICIO = "inicio";
     private static final String PANEL_ESTUDIANTES = "estudiantes";
+    private static final String PANEL_DOCENTES = "docentes";
     private static final String PANEL_CONFIGURACION = "configuracion";
 
     // CardLayout: muestra una pantalla a la vez, como un mazo de cartas
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel panelContenedor = new JPanel(cardLayout);
 
+    // Pantallas de cada entidad
     private final VistaEstudianteSwing vistaEstudiante;
+    private final VistaDocenteSwing vistaDocente;
+
+    // Opciones del menú: son atributos para poder compararlas en actionPerformed
+    private JMenuItem itemInicio;
+    private JMenuItem itemConfiguracion;
+    private JMenuItem itemSalir;
+    private JMenuItem itemEstudiantes;
+    private JMenuItem itemDocentes;
+    private JMenuItem itemMaterias;
+    private JMenuItem itemGrupos;
+    private JMenuItem itemInscripciones;
 
     // Opciones de la pantalla de configuración
     private JComboBox<Integer> comboRegistros;
@@ -62,11 +81,14 @@ public class VistaPrincipalSwing extends JFrame {
     /**
      * Constructor: arma la ventana con el menú y las pantallas.
      * @param controladorEstudiante Controlador de estudiantes
+     * @param controladorDocente Controlador de docentes
      */
-    public VistaPrincipalSwing(ControladorEstudiante controladorEstudiante) {
+    public VistaPrincipalSwing(ControladorEstudiante controladorEstudiante,
+            ControladorDocente controladorDocente) {
         super("Sistema de Gestión Académica - UNIAJC");
 
         vistaEstudiante = new VistaEstudianteSwing(controladorEstudiante);
+        vistaDocente = new VistaDocenteSwing(controladorDocente);
 
         // Al cerrar con la X, se pregunta y se cierra la conexión
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -83,9 +105,10 @@ public class VistaPrincipalSwing extends JFrame {
 
         setJMenuBar(crearMenu());
 
-        // Agregar las pantallas al CardLayout
+        // Agregar las pantallas (cartas) al CardLayout
         panelContenedor.add(crearPanelInicio(), PANEL_INICIO);
         panelContenedor.add(vistaEstudiante, PANEL_ESTUDIANTES);
+        panelContenedor.add(vistaDocente, PANEL_DOCENTES);
         panelContenedor.add(crearPanelConfiguracion(), PANEL_CONFIGURACION);
         add(panelContenedor, BorderLayout.CENTER);
 
@@ -102,16 +125,9 @@ public class VistaPrincipalSwing extends JFrame {
 
         // Menú Archivo
         JMenu menuArchivo = crearMenuBarra("Archivo");
-
-        JMenuItem itemInicio = new JMenuItem("Inicio");
-        itemInicio.addActionListener(e -> cardLayout.show(panelContenedor, PANEL_INICIO));
-
-        JMenuItem itemConfiguracion = new JMenuItem("Configuración");
-        itemConfiguracion.addActionListener(e -> mostrarConfiguracion());
-
-        JMenuItem itemSalir = new JMenuItem("Salir");
-        itemSalir.addActionListener(e -> salir());
-
+        itemInicio = crearItem("Inicio");
+        itemConfiguracion = crearItem("Configuración");
+        itemSalir = crearItem("Salir");
         menuArchivo.add(itemInicio);
         menuArchivo.add(itemConfiguracion);
         menuArchivo.addSeparator();
@@ -119,21 +135,33 @@ public class VistaPrincipalSwing extends JFrame {
 
         // Menú Estudiante
         JMenu menuEstudiante = crearMenuBarra("Estudiante");
-        JMenuItem itemEstudiantes = new JMenuItem("Gestionar estudiantes");
-        itemEstudiantes.addActionListener(e -> {
-            vistaEstudiante.cargarEstudiantes();
-            cardLayout.show(panelContenedor, PANEL_ESTUDIANTES);
-        });
+        itemEstudiantes = crearItem("Gestionar estudiantes");
         menuEstudiante.add(itemEstudiantes);
+
+        // Menú Docente
+        JMenu menuDocente = crearMenuBarra("Docente");
+        itemDocentes = crearItem("Gestionar docentes");
+        menuDocente.add(itemDocentes);
+
+        // Módulos que todavía no están implementados
+        JMenu menuMateria = crearMenuBarra("Materia");
+        itemMaterias = crearItem("Gestionar materias");
+        menuMateria.add(itemMaterias);
+
+        JMenu menuGrupo = crearMenuBarra("Grupo");
+        itemGrupos = crearItem("Gestionar grupos");
+        menuGrupo.add(itemGrupos);
+
+        JMenu menuInscripcion = crearMenuBarra("Inscripción");
+        itemInscripciones = crearItem("Gestionar inscripciones");
+        menuInscripcion.add(itemInscripciones);
 
         barra.add(menuArchivo);
         barra.add(menuEstudiante);
-
-        // Módulos que todavía no están implementados
-        barra.add(crearMenuPendiente("Docente"));
-        barra.add(crearMenuPendiente("Materia"));
-        barra.add(crearMenuPendiente("Grupo"));
-        barra.add(crearMenuPendiente("Inscripción"));
+        barra.add(menuDocente);
+        barra.add(menuMateria);
+        barra.add(menuGrupo);
+        barra.add(menuInscripcion);
 
         return barra;
     }
@@ -146,21 +174,52 @@ public class VistaPrincipalSwing extends JFrame {
     }
 
     /**
-     * Menú de un módulo que aún no existe: muestra un aviso.
+     * Crea una opción del menú y registra la ventana (this) como su oyente.
      */
-    private JMenu crearMenuPendiente(String nombre) {
-        JMenu menu = crearMenuBarra(nombre);
-        JMenuItem item = new JMenuItem("Gestionar " + nombre.toLowerCase());
-        item.addActionListener(e -> JOptionPane.showMessageDialog(this,
-                "El módulo " + nombre + " está en construcción.",
-                "Información", JOptionPane.INFORMATION_MESSAGE));
-        menu.add(item);
-        return menu;
+    private JMenuItem crearItem(String texto) {
+        JMenuItem item = new JMenuItem(texto);
+        item.addActionListener(this);
+        return item;
+    }
+
+    /**
+     * Recibe TODOS los clics del menú.
+     * Con getSource() se sabe cuál opción se presionó y se decide qué hacer.
+     */
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object fuente = e.getSource();
+
+        if (fuente == itemInicio) {
+            cardLayout.show(panelContenedor, PANEL_INICIO);
+        } else if (fuente == itemConfiguracion) {
+            mostrarConfiguracion();
+        } else if (fuente == itemSalir) {
+            salir();
+        } else if (fuente == itemEstudiantes) {
+            vistaEstudiante.cargarEstudiantes();
+            cardLayout.show(panelContenedor, PANEL_ESTUDIANTES);
+        } else if (fuente == itemDocentes) {
+            vistaDocente.cargarDocentes();
+            cardLayout.show(panelContenedor, PANEL_DOCENTES);
+        } else if (fuente == itemMaterias) {
+            mostrarEnConstruccion("Materia");
+        } else if (fuente == itemGrupos) {
+            mostrarEnConstruccion("Grupo");
+        } else if (fuente == itemInscripciones) {
+            mostrarEnConstruccion("Inscripción");
+        }
+    }
+
+    private void mostrarEnConstruccion(String modulo) {
+        JOptionPane.showMessageDialog(this,
+                "El módulo " + modulo + " está en construcción.",
+                "Información", JOptionPane.INFORMATION_MESSAGE);
     }
 
     // ===================== PANTALLA DE INICIO =====================
 
-   private JPanel crearPanelInicio() {
+    private JPanel crearPanelInicio() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(COLOR_SECUNDARIO);
 
@@ -195,6 +254,7 @@ public class VistaPrincipalSwing extends JFrame {
 
         return panel;
     }
+
     private JLabel crearEtiqueta(String texto, int tamano, Color color) {
         JLabel label = new JLabel(texto, SwingConstants.CENTER);
         label.setFont(new Font("Segoe UI", Font.BOLD, tamano));
@@ -239,7 +299,7 @@ public class VistaPrincipalSwing extends JFrame {
         gbc.gridx = 1;
         panel.add(comboConfirmar, gbc);
 
-        // Botones
+        // Botones (estos sí usan lambdas, porque son botones de un panel)
         JButton botonGuardar = VistaEstudianteSwing.crearBoton("Guardar", COLOR_EXITO);
         botonGuardar.addActionListener(e -> guardarConfiguracion());
 
@@ -269,15 +329,20 @@ public class VistaPrincipalSwing extends JFrame {
     }
 
     /**
-     * Aplica la configuración a la pantalla de estudiantes.
+     * Aplica la configuración a las pantallas de estudiantes y docentes.
      */
     private void guardarConfiguracion() {
-        vistaEstudiante.setRegistrosPorPagina((Integer) comboRegistros.getSelectedItem());
-        vistaEstudiante.setConfirmarEliminaciones("si".equals(comboConfirmar.getSelectedItem()));
+        int registros = (Integer) comboRegistros.getSelectedItem();
+        boolean confirmar = "si".equals(comboConfirmar.getSelectedItem());
+
+        vistaEstudiante.setRegistrosPorPagina(registros);
+        vistaEstudiante.setConfirmarEliminaciones(confirmar);
+        vistaDocente.setRegistrosPorPagina(registros);
+        vistaDocente.setConfirmarEliminaciones(confirmar);
 
         JOptionPane.showMessageDialog(this, "Configuración guardada.",
                 "Éxito", JOptionPane.INFORMATION_MESSAGE);
-        cardLayout.show(panelContenedor, PANEL_ESTUDIANTES);
+        cardLayout.show(panelContenedor, PANEL_INICIO);
     }
 
     // ===================== SALIR =====================
