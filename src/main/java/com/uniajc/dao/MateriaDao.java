@@ -16,8 +16,8 @@ import com.uniajc.modelo.Materia;
  */
 public class MateriaDao {
 
-    private static final String TABLA = "\"practica-mvc\".materias";
-    private static final String COLUMNAS = "id, nombre_materia, creditos";
+    private static final String TABLA = "\"practica-mvc\".materia";
+    private static final String COLUMNAS = "id_materia, nombre_materia, creditos";
 
     private Connection conexion() {
         Connection conexion = DatabaseConexion.getConnection();
@@ -40,7 +40,7 @@ public class MateriaDao {
 
     public List<Materia> obtenerTodos() {
         List<Materia> lista = new ArrayList<>();
-        String sql = "SELECT " + COLUMNAS + " FROM " + TABLA + " ORDER BY id";
+        String sql = "SELECT " + COLUMNAS + " FROM " + TABLA + " ORDER BY id_materia";
         try (PreparedStatement ps = conexion().prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -53,7 +53,7 @@ public class MateriaDao {
     }
 
     public Optional<Materia> buscarPorId(int id) {
-        String sql = "SELECT " + COLUMNAS + " FROM " + TABLA + " WHERE id = ?";
+        String sql = "SELECT " + COLUMNAS + " FROM " + TABLA + " WHERE id_materia = ?";
         try (PreparedStatement ps = conexion().prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -83,7 +83,7 @@ public class MateriaDao {
     }
 
     public void actualizar(Materia materia) {
-        String sql = "UPDATE " + TABLA + " SET nombre_materia = ?, creditos = ? WHERE id = ?";
+        String sql = "UPDATE " + TABLA + " SET nombre_materia = ?, creditos = ? WHERE id_materia = ?";
         try (PreparedStatement ps = conexion().prepareStatement(sql)) {
             ps.setString(1, materia.getNombreMateria());
             ps.setInt(2, materia.getCreditos());
@@ -97,7 +97,7 @@ public class MateriaDao {
     }
 
     public void eliminar(int id) {
-        String sql = "DELETE FROM " + TABLA + " WHERE id = ?";
+        String sql = "DELETE FROM " + TABLA + " WHERE id_materia = ?";
         try (PreparedStatement ps = conexion().prepareStatement(sql)) {
             ps.setInt(1, id);
             if (ps.executeUpdate() == 0) {
@@ -110,7 +110,7 @@ public class MateriaDao {
 
     private Materia mapear(ResultSet rs) throws SQLException {
         return new Materia(
-            rs.getInt("id"),
+            rs.getInt("id_materia"),
             rs.getString("nombre_materia"),
             rs.getInt("creditos"));
     }
