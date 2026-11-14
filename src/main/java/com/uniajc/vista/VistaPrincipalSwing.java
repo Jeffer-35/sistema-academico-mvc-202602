@@ -31,6 +31,7 @@ import javax.swing.SwingConstants;
 
 import com.uniajc.controlador.ControladorDocente;
 import com.uniajc.controlador.ControladorEstudiante;
+import com.uniajc.controlador.ControladorGrupo;
 import com.uniajc.controlador.ControladorMateria;
 import com.uniajc.db.DatabaseConexion;
 
@@ -48,6 +49,7 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
     private static final String PANEL_ESTUDIANTES = "estudiantes";
     private static final String PANEL_DOCENTES = "docentes";
     private static final String PANEL_MATERIAS = "materias";
+    private static final String PANEL_GRUPOS = "grupos";
     private static final String PANEL_CONFIGURACION = "configuracion";
 
     // CardLayout: muestra una pantalla a la vez, como un mazo de cartas
@@ -58,6 +60,7 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
     private final VistaEstudianteSwing vistaEstudiante;
     private final VistaDocenteSwing vistaDocente;
     private final VistaMateriaSwing vistaMateria;
+    private final VistaGrupoSwing vistaGrupo;
 
     // Opciones del menú: son atributos para poder compararlas en actionPerformed
     private JMenuItem itemInicio;
@@ -81,12 +84,14 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
      */
     public VistaPrincipalSwing(ControladorEstudiante controladorEstudiante,
             ControladorDocente controladorDocente,
-            ControladorMateria controladorMateria) {
+            ControladorMateria controladorMateria,
+            ControladorGrupo controladorGrupo) {
         super("Sistema de Gestión Académica - UNIAJC");
 
         vistaEstudiante = new VistaEstudianteSwing(controladorEstudiante);
         vistaDocente = new VistaDocenteSwing(controladorDocente);
         vistaMateria = new VistaMateriaSwing(controladorMateria);
+        vistaGrupo = new VistaGrupoSwing(controladorGrupo, controladorMateria, controladorDocente);
 
         // Al cerrar con la X, se pregunta y se cierra la conexión
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -108,6 +113,7 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
         panelContenedor.add(vistaEstudiante, PANEL_ESTUDIANTES);
         panelContenedor.add(vistaDocente, PANEL_DOCENTES);
         panelContenedor.add(vistaMateria, PANEL_MATERIAS);
+        panelContenedor.add(vistaGrupo, PANEL_GRUPOS);
         panelContenedor.add(crearPanelConfiguracion(), PANEL_CONFIGURACION);
         add(panelContenedor, BorderLayout.CENTER);
 
@@ -147,11 +153,12 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
         itemMaterias = crearItem("Gestionar materias");
         menuMateria.add(itemMaterias);
 
-        // Módulos que todavía no están implementados
+        // Menú Grupo
         JMenu menuGrupo = crearMenuBarra("Grupo");
         itemGrupos = crearItem("Gestionar grupos");
         menuGrupo.add(itemGrupos);
 
+        // Módulo que todavía no está implementado
         JMenu menuInscripcion = crearMenuBarra("Inscripción");
         itemInscripciones = crearItem("Gestionar inscripciones");
         menuInscripcion.add(itemInscripciones);
@@ -206,7 +213,8 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
             vistaMateria.cargarMaterias();
             cardLayout.show(panelContenedor, PANEL_MATERIAS);
         } else if (fuente == itemGrupos) {
-            mostrarEnConstruccion("Grupo");
+            vistaGrupo.cargarGrupos();
+            cardLayout.show(panelContenedor, PANEL_GRUPOS);
         } else if (fuente == itemInscripciones) {
             mostrarEnConstruccion("Inscripción");
         }
@@ -342,6 +350,8 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
         vistaDocente.setConfirmarEliminaciones(confirmar);
         vistaMateria.setRegistrosPorPagina(registros);
         vistaMateria.setConfirmarEliminaciones(confirmar);
+        vistaGrupo.setRegistrosPorPagina(registros);
+        vistaGrupo.setConfirmarEliminaciones(confirmar);
 
         JOptionPane.showMessageDialog(this, "Configuración guardada.",
                 "Éxito", JOptionPane.INFORMATION_MESSAGE);
@@ -362,4 +372,4 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
             System.exit(0);
         }
     }
-}
+}
