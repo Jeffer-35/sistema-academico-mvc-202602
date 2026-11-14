@@ -5,12 +5,15 @@ import javax.swing.SwingUtilities;
 // Importar todas las capas del sistema
 import com.uniajc.controlador.ControladorDocente;
 import com.uniajc.controlador.ControladorEstudiante;
+import com.uniajc.controlador.ControladorGrupo;
 import com.uniajc.controlador.ControladorMateria;
 import com.uniajc.dao.DocenteDao;
 import com.uniajc.dao.EstudianteDao;
+import com.uniajc.dao.GrupoDao;
 import com.uniajc.dao.MateriaDao;
 import com.uniajc.servicios.DocenteService;
 import com.uniajc.servicios.EstudianteService;
+import com.uniajc.servicios.GrupoService;
 import com.uniajc.servicios.MateriaService;
 import com.uniajc.vista.VistaPrincipalSwing;
 
@@ -38,9 +41,16 @@ public class Main {
         MateriaService materiaService = new MateriaService(materiaDao);
         ControladorMateria controladorMateria = new ControladorMateria(materiaService);
 
-        // La ventana principal recibe los tres controladores
+        // Cadena de Grupo: necesita también los DAO de Materia y Docente
+        // para validar que existan (llaves foráneas)
+        GrupoDao grupoDao = new GrupoDao();
+        GrupoService grupoService = new GrupoService(grupoDao, materiaDao, docenteDao);
+        ControladorGrupo controladorGrupo = new ControladorGrupo(grupoService);
+
+        // La ventana principal recibe los cuatro controladores
         SwingUtilities.invokeLater(() ->
-                new VistaPrincipalSwing(controladorEstudiante, controladorDocente, controladorMateria)
+                new VistaPrincipalSwing(controladorEstudiante, controladorDocente,
+                        controladorMateria, controladorGrupo)
                         .setVisible(true));
     }
-}
+}
