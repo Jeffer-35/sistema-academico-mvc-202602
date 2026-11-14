@@ -14,8 +14,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.uniajc.dao.EstudianteDao;
+import com.uniajc.dao.GrupoDao;
 import com.uniajc.dao.InscripcionDao;
 import com.uniajc.modelo.Estudiante;
+import com.uniajc.modelo.Grupo;
 import com.uniajc.modelo.Inscripcion;
 
 /**
@@ -33,7 +35,10 @@ class InscripcionServiceTest {
         EstudianteDaoFalso estudianteDao = new EstudianteDaoFalso();
         // Un estudiante que sí existe, con ID 1
         estudianteDao.guardar(new Estudiante(0, "Ana", "Martínez", "ana@email.com"));
-        servicio = new InscripcionService(inscripcionDao, estudianteDao);
+        // Un grupo que sí existe, con ID 1
+        GrupoDaoFalso grupoDao = new GrupoDaoFalso();
+        grupoDao.guardar(new Grupo(0, 1, 1, "B-204", "Lunes 6-8 pm"));
+        servicio = new InscripcionService(inscripcionDao, estudianteDao, grupoDao);
     }
 
     @Test
@@ -107,12 +112,21 @@ class InscripcionServiceTest {
     }
 
     @Test
-    @DisplayName("Si el grupo no existe, muestra un mensaje claro (error 23503)")
+    @DisplayName("No permite inscribir en un grupo que no existe")
     void grupoInexistente() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> servicio.registrarInscripcion(new Inscripcion(0, 1, 50, null, "ACTIVO")));
+
+        assertEquals("El grupo seleccionado no existe.", error.getMessage());
+    }
+
+    @Test
+    @DisplayName("Si la base de datos rechaza por llave foránea (23503), muestra un mensaje claro")
+    void errorLlaveForanea() {
         inscripcionDao.simularGrupoInexistente = true;
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> servicio.registrarInscripcion(new Inscripcion(0, 1, 50, null, "ACTIVO")));
+                () -> servicio.registrarInscripcion(new Inscripcion(0, 1, 1, null, "ACTIVO")));
 
         assertEquals("El grupo seleccionado no existe.", error.getMessage());
     }
@@ -205,6 +219,23 @@ class InscripcionServiceTest {
         @Override
         public Optional<Estudiante> buscarPorId(int id) {
             return lista.stream().filter(e -> e.getIdEstudiante() == id).findFirst();
+        }
+    }
+
+    private static class GrupoDaoFalso extends GrupoDao {
+
+        private final List<Grupo> lista = new ArrayList<>();
+        private int siguienteId = 1;
+
+        @Override
+        public void guardar(Grupo grupo) {
+            grupo.setIdGrupo(siguienteId++);
+            lista.add(grupo);
+        }
+
+        @Override
+        public Optional<Grupo> buscarPorId(int id) {
+            return lista.stream().filter(g -> g.getIdGrupo() == id).findFirst();
         }
     }
 }

@@ -32,6 +32,7 @@ import javax.swing.SwingConstants;
 import com.uniajc.controlador.ControladorDocente;
 import com.uniajc.controlador.ControladorEstudiante;
 import com.uniajc.controlador.ControladorGrupo;
+import com.uniajc.controlador.ControladorInscripcion;
 import com.uniajc.controlador.ControladorMateria;
 import com.uniajc.db.DatabaseConexion;
 
@@ -50,6 +51,7 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
     private static final String PANEL_DOCENTES = "docentes";
     private static final String PANEL_MATERIAS = "materias";
     private static final String PANEL_GRUPOS = "grupos";
+    private static final String PANEL_INSCRIPCIONES = "inscripciones";
     private static final String PANEL_CONFIGURACION = "configuracion";
 
     // CardLayout: muestra una pantalla a la vez, como un mazo de cartas
@@ -61,6 +63,7 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
     private final VistaDocenteSwing vistaDocente;
     private final VistaMateriaSwing vistaMateria;
     private final VistaGrupoSwing vistaGrupo;
+    private final VistaInscripcionSwing vistaInscripcion;
 
     // Opciones del menú: son atributos para poder compararlas en actionPerformed
     private JMenuItem itemInicio;
@@ -81,17 +84,22 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
      * @param controladorEstudiante Controlador de estudiantes
      * @param controladorDocente Controlador de docentes
      * @param controladorMateria Controlador de materias
+     * @param controladorGrupo Controlador de grupos
+     * @param controladorInscripcion Controlador de inscripciones
      */
     public VistaPrincipalSwing(ControladorEstudiante controladorEstudiante,
             ControladorDocente controladorDocente,
             ControladorMateria controladorMateria,
-            ControladorGrupo controladorGrupo) {
+            ControladorGrupo controladorGrupo,
+            ControladorInscripcion controladorInscripcion) {
         super("Sistema de Gestión Académica - UNIAJC");
 
         vistaEstudiante = new VistaEstudianteSwing(controladorEstudiante);
         vistaDocente = new VistaDocenteSwing(controladorDocente);
         vistaMateria = new VistaMateriaSwing(controladorMateria);
         vistaGrupo = new VistaGrupoSwing(controladorGrupo, controladorMateria, controladorDocente);
+        vistaInscripcion = new VistaInscripcionSwing(controladorInscripcion,
+                controladorEstudiante, controladorGrupo, controladorMateria);
 
         // Al cerrar con la X, se pregunta y se cierra la conexión
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -114,6 +122,7 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
         panelContenedor.add(vistaDocente, PANEL_DOCENTES);
         panelContenedor.add(vistaMateria, PANEL_MATERIAS);
         panelContenedor.add(vistaGrupo, PANEL_GRUPOS);
+        panelContenedor.add(vistaInscripcion, PANEL_INSCRIPCIONES);
         panelContenedor.add(crearPanelConfiguracion(), PANEL_CONFIGURACION);
         add(panelContenedor, BorderLayout.CENTER);
 
@@ -158,7 +167,7 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
         itemGrupos = crearItem("Gestionar grupos");
         menuGrupo.add(itemGrupos);
 
-        // Módulo que todavía no está implementado
+        // Menú Inscripción
         JMenu menuInscripcion = crearMenuBarra("Inscripción");
         itemInscripciones = crearItem("Gestionar inscripciones");
         menuInscripcion.add(itemInscripciones);
@@ -216,14 +225,9 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
             vistaGrupo.cargarGrupos();
             cardLayout.show(panelContenedor, PANEL_GRUPOS);
         } else if (fuente == itemInscripciones) {
-            mostrarEnConstruccion("Inscripción");
+            vistaInscripcion.cargarInscripciones();
+            cardLayout.show(panelContenedor, PANEL_INSCRIPCIONES);
         }
-    }
-
-    private void mostrarEnConstruccion(String modulo) {
-        JOptionPane.showMessageDialog(this,
-                "El módulo " + modulo + " está en construcción.",
-                "Información", JOptionPane.INFORMATION_MESSAGE);
     }
 
     // ===================== PANTALLA DE INICIO =====================
@@ -338,7 +342,7 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
     }
 
     /**
-     * Aplica la configuración a las pantallas de estudiantes, docentes y materias.
+     * Aplica la configuración a todas las pantallas.
      */
     private void guardarConfiguracion() {
         int registros = (Integer) comboRegistros.getSelectedItem();
@@ -352,6 +356,8 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
         vistaMateria.setConfirmarEliminaciones(confirmar);
         vistaGrupo.setRegistrosPorPagina(registros);
         vistaGrupo.setConfirmarEliminaciones(confirmar);
+        vistaInscripcion.setRegistrosPorPagina(registros);
+        vistaInscripcion.setConfirmarEliminaciones(confirmar);
 
         JOptionPane.showMessageDialog(this, "Configuración guardada.",
                 "Éxito", JOptionPane.INFORMATION_MESSAGE);
@@ -372,4 +378,4 @@ public class VistaPrincipalSwing extends JFrame implements ActionListener {
             System.exit(0);
         }
     }
-}
+}

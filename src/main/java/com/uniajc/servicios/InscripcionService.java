@@ -8,6 +8,7 @@ import java.util.Set;
 
 // Importar los DAO y el modelo
 import com.uniajc.dao.EstudianteDao;
+import com.uniajc.dao.GrupoDao;
 import com.uniajc.dao.InscripcionDao;
 import com.uniajc.modelo.Inscripcion;
 
@@ -15,7 +16,7 @@ import com.uniajc.modelo.Inscripcion;
  * Capa de Servicio para la entidad Inscripcion.
  * Aquí van las validaciones y las reglas de negocio:
  *  - El estudiante debe existir.
- *  - El grupo debe existir (lo verifica la llave foránea de la base de datos).
+ *  - El grupo debe existir.
  *  - Un estudiante no puede inscribirse dos veces en el mismo grupo.
  *  - La nota final va de 0 a 5 (puede estar vacía).
  *  - El estado solo puede ser ACTIVO, APROBADO, REPROBADO o CANCELADO.
@@ -33,20 +34,23 @@ public class InscripcionService {
     private static final double NOTA_APROBATORIA = 3.0;
 
     // Códigos de error de PostgreSQL
-    private static final String ERROR_LLAVE_FORANEA = "23503"; // el grupo no existe
+    private static final String ERROR_LLAVE_FORANEA = "23503"; // el grupo o el estudiante ya no existe
     private static final String ERROR_DUPLICADO = "23505";     // ya existe la misma inscripción
 
     private final InscripcionDao inscripcionDao;
     private final EstudianteDao estudianteDao;
+    private final GrupoDao grupoDao;
 
     /**
      * Constructor: recibe los DAO que va a utilizar.
      * @param inscripcionDao DAO de inscripciones
      * @param estudianteDao DAO de estudiantes (para verificar que el estudiante exista)
+     * @param grupoDao DAO de grupos (para verificar que el grupo exista)
      */
-    public InscripcionService(InscripcionDao inscripcionDao, EstudianteDao estudianteDao) {
+    public InscripcionService(InscripcionDao inscripcionDao, EstudianteDao estudianteDao, GrupoDao grupoDao) {
         this.inscripcionDao = inscripcionDao;
         this.estudianteDao = estudianteDao;
+        this.grupoDao = grupoDao;
     }
 
     /**
@@ -138,6 +142,11 @@ public class InscripcionService {
             throw new IllegalArgumentException("El estudiante seleccionado no existe.");
         }
 
+        // El grupo debe existir
+        if (grupoDao.buscarPorId(inscripcion.getIdGrupo()).isEmpty()) {
+            throw new IllegalArgumentException("El grupo seleccionado no existe.");
+        }
+
         // Nota: puede estar vacía, pero si tiene valor debe estar entre 0 y 5
         Double nota = inscripcion.getNotaFinal();
         if (nota != null && (nota < NOTA_MINIMA || nota > NOTA_MAXIMA)) {
@@ -185,6 +194,7 @@ public class InscripcionService {
 
     /**
      * Convierte los errores técnicos de PostgreSQL en mensajes claros para el usuario.
+     * Sirve de respaldo por si otro usuario borra el grupo justo antes de guardar.
      */
     private RuntimeException traducirError(RuntimeException ex) {
         if (ex.getCause() instanceof SQLException sqlEx) {
