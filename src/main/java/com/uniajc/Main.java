@@ -6,14 +6,17 @@ import javax.swing.SwingUtilities;
 import com.uniajc.controlador.ControladorDocente;
 import com.uniajc.controlador.ControladorEstudiante;
 import com.uniajc.controlador.ControladorGrupo;
+import com.uniajc.controlador.ControladorInscripcion;
 import com.uniajc.controlador.ControladorMateria;
 import com.uniajc.dao.DocenteDao;
 import com.uniajc.dao.EstudianteDao;
 import com.uniajc.dao.GrupoDao;
+import com.uniajc.dao.InscripcionDao;
 import com.uniajc.dao.MateriaDao;
 import com.uniajc.servicios.DocenteService;
 import com.uniajc.servicios.EstudianteService;
 import com.uniajc.servicios.GrupoService;
+import com.uniajc.servicios.InscripcionService;
 import com.uniajc.servicios.MateriaService;
 import com.uniajc.vista.VistaPrincipalSwing;
 
@@ -47,10 +50,16 @@ public class Main {
         GrupoService grupoService = new GrupoService(grupoDao, materiaDao, docenteDao);
         ControladorGrupo controladorGrupo = new ControladorGrupo(grupoService);
 
-        // La ventana principal recibe los cuatro controladores
+        // Cadena de Inscripción: necesita también los DAO de Estudiante y Grupo
+        // para validar que existan (llaves foráneas)
+        InscripcionDao inscripcionDao = new InscripcionDao();
+        InscripcionService inscripcionService = new InscripcionService(inscripcionDao, estudianteDao, grupoDao);
+        ControladorInscripcion controladorInscripcion = new ControladorInscripcion(inscripcionService);
+
+        // La ventana principal recibe los cinco controladores
         SwingUtilities.invokeLater(() ->
                 new VistaPrincipalSwing(controladorEstudiante, controladorDocente,
-                        controladorMateria, controladorGrupo)
+                        controladorMateria, controladorGrupo, controladorInscripcion)
                         .setVisible(true));
     }
-}
+}
