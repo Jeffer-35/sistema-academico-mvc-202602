@@ -2,6 +2,7 @@ package com.uniajc.controlador;
 
 // Importaciones necesarias
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 // Importar el modelo y el servicio
@@ -46,6 +47,14 @@ public class ControladorEstudiante {
      */
     public List<Estudiante> listarEstudiantes() {
         return estudianteService.obtenerTodosLosEstudiantes();
+    }
+
+    /**
+     * Devuelve los estudiantes para el combo (id -> "Nombre Apellido").
+     * Los datos vienen del procedimiento almacenado fn_listar_estudiantes_combo().
+     */
+    public Map<Integer, String> listarEstudiantesParaCombo() {
+        return estudianteService.listarEstudiantesParaCombo();
     }
 
     /**

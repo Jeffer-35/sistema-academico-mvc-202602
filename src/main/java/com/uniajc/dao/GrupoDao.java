@@ -5,7 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.uniajc.db.DatabaseConexion;
@@ -118,6 +120,25 @@ public class GrupoDao {
         } catch (SQLException e) {
             throw new RuntimeException("Error al eliminar el grupo: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Llama al procedimiento almacenado fn_listar_grupos_combo() de la base.
+     * Devuelve id_grupo -> descripción ("G1 · Materia · Docente · Aula · Horario"),
+     * en el mismo orden en que la función los entrega (por eso LinkedHashMap).
+     */
+    public Map<Integer, String> listarParaCombo() {
+        Map<Integer, String> grupos = new LinkedHashMap<>();
+        String sql = "SELECT id_grupo, descripcion FROM \"practica-mvc\".fn_listar_grupos_combo()";
+        try (PreparedStatement ps = conexion().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                grupos.put(rs.getInt("id_grupo"), rs.getString("descripcion"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al listar los grupos para el combo: " + e.getMessage(), e);
+        }
+        return grupos;
     }
 
     /** Convierte una fila de la tabla en un objeto Grupo. */

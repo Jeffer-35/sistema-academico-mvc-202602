@@ -6,7 +6,9 @@ import java.sql.PreparedStatement; // Para preparar consultas SQL seguras
 import java.sql.ResultSet;         // Para recibir los resultados de las consultas
 import java.sql.SQLException;      // Para manejar errores de SQL
 import java.util.ArrayList;        // Para crear listas dinámicas
+import java.util.LinkedHashMap;    // Mapa que conserva el orden de inserción
 import java.util.List;             // Interfaz de lista
+import java.util.Map;              // Interfaz de mapa (clave -> valor)
 import java.util.Optional;         // Para manejar valores que pueden ser nulos
 
 // Importar la clase de conexión y el modelo
@@ -155,6 +157,29 @@ public class EstudianteDao {
         } catch (SQLException e) {
             throw new RuntimeException("Error al eliminar el estudiante: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Llama al procedimiento almacenado fn_listar_estudiantes_combo() de la base.
+     * Devuelve id_estudiante -> "Nombre Apellido", ordenados por nombre
+     * (la función ya los entrega ordenados; LinkedHashMap conserva ese orden).
+     * @return Mapa con los estudiantes para llenar un combo
+     */
+    public Map<Integer, String> listarParaCombo() {
+        Map<Integer, String> estudiantes = new LinkedHashMap<>();
+        String sql = "SELECT id_estudiante, nombre_completo FROM \"practica-mvc\".fn_listar_estudiantes_combo()";
+
+        try (PreparedStatement pstmt = obtenerConexion().prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                estudiantes.put(rs.getInt("id_estudiante"), rs.getString("nombre_completo"));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al listar los estudiantes para el combo: " + e.getMessage(), e);
+        }
+        return estudiantes;
     }
 
     /**

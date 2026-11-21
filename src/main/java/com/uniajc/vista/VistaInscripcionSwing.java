@@ -12,7 +12,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,10 +40,7 @@ import com.uniajc.controlador.ControladorEstudiante;
 import com.uniajc.controlador.ControladorGrupo;
 import com.uniajc.controlador.ControladorInscripcion;
 import com.uniajc.controlador.ControladorMateria;
-import com.uniajc.modelo.Estudiante;
-import com.uniajc.modelo.Grupo;
 import com.uniajc.modelo.Inscripcion;
-import com.uniajc.modelo.Materia;
 
 /**
  * Vista Swing (panel) para la entidad Inscripcion.
@@ -81,8 +78,9 @@ public class VistaInscripcionSwing extends JPanel {
 
     // Datos: lista mostrada y "diccionarios" para pasar de id a texto
     private List<Inscripcion> listaActual = new ArrayList<>();
-    private final Map<Integer, String> textoEstudiante = new HashMap<>();
-    private final Map<Integer, String> textoGrupo = new HashMap<>();
+    // LinkedHashMap: conserva el orden en que llegan de la base (para los combos)
+    private final Map<Integer, String> textoEstudiante = new LinkedHashMap<>();
+    private final Map<Integer, String> textoGrupo = new LinkedHashMap<>();
 
     // Paginación y configuración
     private int paginaActual = 1;
@@ -276,25 +274,16 @@ public class VistaInscripcionSwing extends JPanel {
 
     /**
      * Arma los "diccionarios" para mostrar el nombre del estudiante y la
-     * descripción del grupo (materia, aula y horario) en vez de solo los IDs.
+     * descripción del grupo en vez de solo los IDs.
+     * Los textos vienen de los procedimientos almacenados de la base:
+     * fn_listar_estudiantes_combo() y fn_listar_grupos_combo().
      */
     private void cargarTextos() {
         textoEstudiante.clear();
-        for (Estudiante e : controladorEstudiante.listarEstudiantes()) {
-            textoEstudiante.put(e.getIdEstudiante(), e.getNombre() + " " + e.getApellido());
-        }
-
-        Map<Integer, String> nombreMateria = new HashMap<>();
-        for (Materia m : controladorMateria.listarMaterias()) {
-            nombreMateria.put(m.getIdMateria(), m.getNombreMateria());
-        }
+        textoEstudiante.putAll(controladorEstudiante.listarEstudiantesParaCombo());
 
         textoGrupo.clear();
-        for (Grupo g : controladorGrupo.listarGrupos()) {
-            String materia = nombreMateria.getOrDefault(g.getIdMateria(), "Materia " + g.getIdMateria());
-            textoGrupo.put(g.getIdGrupo(),
-                    "G" + g.getIdGrupo() + " · " + materia + " · " + g.getAula() + " · " + g.getHorario());
-        }
+        textoGrupo.putAll(controladorGrupo.listarGruposParaCombo());
     }
 
     /**

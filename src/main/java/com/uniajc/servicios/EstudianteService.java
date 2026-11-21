@@ -2,6 +2,7 @@ package com.uniajc.servicios;
 
 // Importaciones necesarias
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -49,6 +50,15 @@ public class EstudianteService {
      */
     public List<Estudiante> obtenerTodosLosEstudiantes() {
         return estudianteDao.obtenerTodos();
+    }
+
+    /**
+     * Estudiantes para llenar un combo, desde el procedimiento almacenado
+     * fn_listar_estudiantes_combo(): id_estudiante -> "Nombre Apellido".
+     * @return Mapa ordenado por nombre
+     */
+    public Map<Integer, String> listarEstudiantesParaCombo() {
+        return estudianteDao.listarParaCombo();
     }
 
     /**
