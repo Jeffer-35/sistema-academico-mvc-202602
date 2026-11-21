@@ -8,16 +8,22 @@ import com.uniajc.controlador.ControladorEstudiante;
 import com.uniajc.controlador.ControladorGrupo;
 import com.uniajc.controlador.ControladorInscripcion;
 import com.uniajc.controlador.ControladorMateria;
+import com.uniajc.controlador.ControladorUsuario;
 import com.uniajc.dao.DocenteDao;
 import com.uniajc.dao.EstudianteDao;
 import com.uniajc.dao.GrupoDao;
 import com.uniajc.dao.InscripcionDao;
 import com.uniajc.dao.MateriaDao;
+import com.uniajc.dao.UsuarioDao;
+import com.uniajc.db.DatabaseConexion;
+import com.uniajc.modelo.Usuario;
 import com.uniajc.servicios.DocenteService;
 import com.uniajc.servicios.EstudianteService;
 import com.uniajc.servicios.GrupoService;
 import com.uniajc.servicios.InscripcionService;
 import com.uniajc.servicios.MateriaService;
+import com.uniajc.servicios.UsuarioService;
+import com.uniajc.vista.VistaLoginSwing;
 import com.uniajc.vista.VistaPrincipalSwing;
 
 /**
@@ -56,10 +62,30 @@ public class Main {
         InscripcionService inscripcionService = new InscripcionService(inscripcionDao, estudianteDao, grupoDao);
         ControladorInscripcion controladorInscripcion = new ControladorInscripcion(inscripcionService);
 
-        // La ventana principal recibe los cinco controladores
-        SwingUtilities.invokeLater(() ->
-                new VistaPrincipalSwing(controladorEstudiante, controladorDocente,
-                        controladorMateria, controladorGrupo, controladorInscripcion)
-                        .setVisible(true));
+        // Cadena de Usuario (login): DAO -> Servicio -> Controlador
+        UsuarioDao usuarioDao = new UsuarioDao();
+        UsuarioService usuarioService = new UsuarioService(usuarioDao);
+        ControladorUsuario controladorUsuario = new ControladorUsuario(usuarioService);
+
+        SwingUtilities.invokeLater(() -> {
+            // 1. Primero se muestra el login. Es modal: el programa espera aquí.
+            VistaLoginSwing login = new VistaLoginSwing(controladorUsuario);
+            login.setVisible(true);
+
+            // 2. Si cerró el login sin entrar, se cierra todo
+            Usuario usuario = login.getUsuarioAutenticado();
+            if (usuario == null) {
+                DatabaseConexion.closeConnection();
+                System.exit(0);
+                return;
+            }
+
+            // 3. Si entró, se abre la ventana principal con los cinco controladores
+            VistaPrincipalSwing ventana = new VistaPrincipalSwing(controladorEstudiante, controladorDocente,
+                    controladorMateria, controladorGrupo, controladorInscripcion);
+            ventana.setTitle(ventana.getTitle() + "  |  " + usuario.getNombreCompleto()
+                    + " (" + usuario.getRol() + ")");
+            ventana.setVisible(true);
+        });
     }
 }
