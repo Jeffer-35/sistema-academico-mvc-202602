@@ -1,6 +1,7 @@
 package com.uniajc.servicios;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.uniajc.dao.DocenteDao;
@@ -35,6 +36,14 @@ public class GrupoService {
 
     public List<Grupo> obtenerTodosLosGrupos() {
         return grupoDao.obtenerTodos();
+    }
+
+    /**
+     * Grupos para llenar un combo, desde el procedimiento almacenado
+     * fn_listar_grupos_combo(): id_grupo -> descripción.
+     */
+    public Map<Integer, String> listarGruposParaCombo() {
+        return grupoDao.listarParaCombo();
     }
 
     public Optional<Grupo> buscarGrupoPorId(int id) {
@@ -79,12 +88,12 @@ public class GrupoService {
         }
 
         String aula = grupo.getAula() == null ? "" : grupo.getAula().trim();
-        if (aula.isEmpty() || aula.length() > 50) {
-            throw new IllegalArgumentException("El aula es obligatoria (máximo 50 caracteres).");
+        if (aula.isEmpty() || aula.length() > 30) {
+            throw new IllegalArgumentException("El aula es obligatoria (máximo 30 caracteres).");
         }
         String horario = grupo.getHorario() == null ? "" : grupo.getHorario().trim();
-        if (horario.isEmpty() || horario.length() > 100) {
-            throw new IllegalArgumentException("El horario es obligatorio (máximo 100 caracteres).");
+        if (horario.isEmpty() || horario.length() > 50) {
+            throw new IllegalArgumentException("El horario es obligatorio (máximo 50 caracteres).");
         }
 
         // Se guardan sin espacios sobrantes
